@@ -3,11 +3,10 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "docker compose up -d postgres && next dev",
+    "dev": "trap 'docker compose down' EXIT INT TERM && docker compose up -d postgres && next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint",
-    "stop": "docker compose down"
+    "lint": "eslint"
   },
   "dependencies": {
     "@prisma/adapter-pg": "^7.4.2",
