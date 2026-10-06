@@ -33,21 +33,21 @@ export function HeaderNav({ session }: Props) {
             <div/>
             <div className="flex jusify-center">
                 <Tabs value={tabValue} className="w-fit">
-                    <TabsList>
-                        <TabsTrigger value="dashboard" asChild>
-                            <Link href="/dashboard">
+                    <TabsList className="h-10 p-1 bg-muted/30 border border-border/50 shadow-sm backdrop-blur-md rounded-full">
+                        <TabsTrigger value="dashboard" asChild className="rounded-full px-4 cursor-pointer transition-all duration-300 data-active:bg-primary data-active:text-primary-foreground data-active:shadow-md">
+                            <Link href="/dashboard" className="flex items-center gap-2">
                                 <Plus className="h-4 w-4"/>
                                 Создать сборку
                             </Link>
                         </TabsTrigger>
-                        <TabsTrigger value="builds" asChild>
-                            <Link href="/builds">
+                        <TabsTrigger value="builds" asChild className="rounded-full px-4 cursor-pointer transition-all duration-300 data-active:bg-primary data-active:text-primary-foreground data-active:shadow-md">
+                            <Link href="/builds" className="flex items-center gap-2">
                                 <LayoutList className="h-4 w-4"/>
                                 Мои сборки
                             </Link>
                         </TabsTrigger>
-                        <TabsTrigger value="explore" asChild>
-                            <Link href="/builds/explore">
+                        <TabsTrigger value="explore" asChild className="rounded-full px-4 cursor-pointer transition-all duration-300 data-active:bg-primary data-active:text-primary-foreground data-active:shadow-md">
+                            <Link href="/builds/explore" className="flex items-center gap-2">
                                 <Users className="h-4 w-4"/>
                                 Публичные сборки
                             </Link>

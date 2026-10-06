@@ -14,8 +14,8 @@ export function ComponentCard({
     onClick
 }: Props) {
     return (
-        <Card>
-            <CardHeader className="min-h-0 flex-1 pb-2">
+        <Card className="flex flex-col justify-between h-full min-h-[180px]">
+            <CardHeader className="flex-1 pb-4">
                 <CardTitle className="text-base font-medium leading-tight">{name}</CardTitle>
                 <CardDescription className="text-sm font-medium tabular-nums">
                     { new Intl.NumberFormat('ru-RU').format(price) }
@@ -25,7 +25,7 @@ export function ComponentCard({
                 <Button
                     variant="secondary"
                     size="sm"
-                    className="w-full gap-1.5"
+                    className="w-full gap-1.5 cursor-pointer bg-red-500 text-white hover:bg-red-600 border-none"
                     onClick={onClick}
                 >
                     Добавить

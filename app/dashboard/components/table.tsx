@@ -88,7 +88,7 @@ export function TableParts({
                                         onOpenChange={(open) => setOpenCategoryId(open ? category.id : null)}
                                     >
                                     <DialogTrigger asChild>
-                                        <Button variant="outline" size="sm">
+                                        <Button variant="outline" size="sm" className="cursor-pointer bg-red-500 text-white hover:bg-red-600 hover:text-white border-transparent">
                                             <Plus className='h-4 w-4 mr-1'/>
                                             { selected ? 'Изменить' : 'Добавить'}
                                         </Button>

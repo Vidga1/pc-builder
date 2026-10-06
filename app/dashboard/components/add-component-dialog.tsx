@@ -30,14 +30,14 @@ export function AddComponentDialogContent({
     }, [categoryId])
 
     return (
-        <DialogContent className="max-w-4xl w-[190vw] max-h-[85vh] overflow-hidden flex flex-col">
+        <DialogContent className="sm:max-w-5xl w-[95vw] max-h-[90vh] overflow-hidden flex flex-col">
             <DialogHeader>
                 <DialogTitle>Добавить компонент - {categoryName}</DialogTitle>
             </DialogHeader>
-            <div className="overflow-y-auto flex-1 mx-1 px-1">
+            <div className="overflow-y-auto mx-1 px-4">
                 {
                     components.length > 0 ? (
-                        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                        <div className="grid gap-4 grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
                             {
                                 components.map((c) => (
                                     <ComponentCard
