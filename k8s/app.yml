@@ -1,0 +1,67 @@
+apiVersion: apps/v1
+kind: Deployment
+
+metadata:
+  name: pc-builder
+  namespace: pc-builder
+
+spec:
+  replicas: 1
+
+  selector:
+    matchLabels:
+      app: pc-builder
+
+  template:
+    metadata:
+      labels:
+        app: pc-builder
+
+    spec:
+      nodeSelector:
+        kubernetes.io/hostname: k8s-worker
+
+      containers:
+        - name: pc-builder
+          image: ghcr.io/vidga1/pc-builder:latest
+          imagePullPolicy: Always
+
+          ports:
+            - containerPort: 3000
+
+          env:
+            - name: NODE_ENV
+              value: production
+
+            - name: POSTGRES_USER
+              valueFrom:
+                secretKeyRef:
+                  name: pc-builder-secrets
+                  key: POSTGRES_USER
+
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: pc-builder-secrets
+                  key: POSTGRES_PASSWORD
+
+            - name: POSTGRES_DB
+              valueFrom:
+                secretKeyRef:
+                  name: pc-builder-secrets
+                  key: POSTGRES_DB
+
+            - name: DATABASE_URL
+              value: "postgresql://$(POSTGRES_USER):$(POSTGRES_PASSWORD)@postgres:5432/$(POSTGRES_DB)"
+
+            - name: NEXTAUTH_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: pc-builder-secrets
+                  key: NEXTAUTH_SECRET
+
+            - name: NEXTAUTH_URL
+              value: "http://151.248.113.189:30080"
+
+            - name: RUN_SEED_ON_START
+              value: "false"
