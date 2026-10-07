@@ -42,3 +42,9 @@ yarn-error.log*
 next-env.d.ts
 
 /lib/generated/prisma
+# terraform
+
+infra/.terraform/
+*.tfstate
+*.tfstate.*
+*.tfplan

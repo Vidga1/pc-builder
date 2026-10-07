@@ -1,0 +1,33 @@
+---
+- name: Prepare Kubernetes nodes
+  hosts: k8s
+  become: true
+  roles:
+    - common
+
+- name: Initialize Kubernetes control plane
+  hosts: control_plane
+  become: true
+  roles:
+    - control_plane
+
+- name: Join Kubernetes workers
+  hosts: workers
+  become: true
+  roles:
+    - worker
+
+- name: Show Kubernetes nodes
+  hosts: control_plane
+  become: true
+  tasks:
+    - name: Get nodes
+      ansible.builtin.command: kubectl get nodes -o wide
+      environment:
+        KUBECONFIG: /etc/kubernetes/admin.conf
+      register: kubernetes_nodes
+      changed_when: false
+
+    - name: Print nodes
+      ansible.builtin.debug:
+        var: kubernetes_nodes.stdout_lines
