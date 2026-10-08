@@ -1,0 +1,13 @@
+---
+# Запускается ПОСЛЕ site.yml, когда Kubernetes-кластер уже существует.
+- name: Install K9s on control-plane
+  hosts: control_plane
+  become: true
+  roles:
+    - k9s
+
+- name: Install Metrics Server in Kubernetes
+  hosts: control_plane
+  become: true
+  roles:
+    - metrics_server

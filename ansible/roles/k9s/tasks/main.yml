@@ -1,0 +1,23 @@
+---
+- name: Install package dependencies for K9s .deb
+  ansible.builtin.apt:
+    name:
+      - xz-utils
+      - python3-debian
+    state: present
+
+- name: Download K9s v0.51.0 for Ubuntu amd64
+  ansible.builtin.get_url:
+    url: https://github.com/derailed/k9s/releases/download/v0.51.0/k9s_linux_amd64.deb
+    dest: /var/tmp/k9s_v0.51.0_linux_amd64.deb
+    mode: '0644'
+
+- name: Install K9s package
+  ansible.builtin.apt:
+    deb: /var/tmp/k9s_v0.51.0_linux_amd64.deb
+    state: present
+
+- name: Check installed K9s version
+  ansible.builtin.command: k9s version --short
+  register: k9s_version_result
+  changed_when: false

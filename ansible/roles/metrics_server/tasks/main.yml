@@ -1,0 +1,47 @@
+---
+- name: Create Metrics Server addon directory
+  ansible.builtin.file:
+    path: /opt/k8s-addons/metrics-server
+    state: directory
+    mode: '0755'
+
+- name: Download pinned Metrics Server v0.9.0 manifest
+  ansible.builtin.get_url:
+    url: https://github.com/kubernetes-sigs/metrics-server/releases/download/v0.9.0/components.yaml
+    dest: /opt/k8s-addons/metrics-server/components.yaml
+    checksum: sha256:1cec29a5267809306a2c6ec74a3e449abbb705b4a8beed0c8a1963910f72c79b
+    mode: '0644'
+
+- name: Add Kustomize configuration for training cluster
+  ansible.builtin.copy:
+    src: kustomization.yaml
+    dest: /opt/k8s-addons/metrics-server/kustomization.yaml
+    mode: '0644'
+
+- name: Install or reconcile Metrics Server
+  ansible.builtin.command: kubectl apply -k /opt/k8s-addons/metrics-server
+  environment:
+    KUBECONFIG: /etc/kubernetes/admin.conf
+  register: metrics_apply
+  changed_when: >-
+    'created' in metrics_apply.stdout or 'configured' in metrics_apply.stdout
+
+- name: Wait for Metrics Server to become ready
+  ansible.builtin.command: kubectl rollout status deployment/metrics-server -n kube-system --timeout=180s
+  environment:
+    KUBECONFIG: /etc/kubernetes/admin.conf
+  changed_when: false
+
+- name: Verify that node metrics are available
+  ansible.builtin.command: kubectl top nodes
+  environment:
+    KUBECONFIG: /etc/kubernetes/admin.conf
+  register: metrics_top
+  retries: 9
+  delay: 10
+  until: metrics_top.rc == 0
+  changed_when: false
+
+- name: Show current node metrics
+  ansible.builtin.debug:
+    var: metrics_top.stdout_lines
