@@ -1,0 +1,21 @@
+---
+- name: Install or upgrade cert-manager and CRDs
+  ansible.builtin.command:
+    argv:
+      - helm
+      - upgrade
+      - --install
+      - cert-manager
+      - oci://quay.io/jetstack/charts/cert-manager
+      - --version
+      - v1.21.2
+      - --namespace
+      - cert-manager
+      - --create-namespace
+      - --set
+      - crds.enabled=true
+      - --wait
+      - --timeout
+      - 8m
+  environment:
+    KUBECONFIG: "{{ kubeconfig_path }}"
