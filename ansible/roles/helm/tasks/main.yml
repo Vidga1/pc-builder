@@ -1,0 +1,17 @@
+---
+- name: Check if Helm is installed
+  ansible.builtin.command: helm version --short
+  register: helm_version
+  changed_when: false
+  failed_when: false
+
+- name: Download official Helm 3 installer if necessary
+  ansible.builtin.get_url:
+    url: https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3
+    dest: /tmp/get-helm-3.sh
+    mode: "0700"
+  when: helm_version.rc != 0
+
+- name: Install Helm 3 if necessary
+  ansible.builtin.command: /bin/bash /tmp/get-helm-3.sh
+  when: helm_version.rc != 0

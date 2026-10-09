@@ -61,7 +61,7 @@ spec:
                   key: NEXTAUTH_SECRET
 
             - name: NEXTAUTH_URL
-              value: "http://151.248.113.189:30080"
+              value: "https://my-pc-builder.ru"
 
             - name: RUN_SEED_ON_START
               value: "false"
