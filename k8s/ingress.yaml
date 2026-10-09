@@ -1,0 +1,28 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: pc-builder
+  namespace: pc-builder
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+    traefik.ingress.kubernetes.io/router.entrypoints: websecure
+
+spec:
+  ingressClassName: traefik
+
+  tls:
+    - hosts:
+        - my-pc-builder.ru
+      secretName: pc-builder-tls
+
+  rules:
+    - host: my-pc-builder.ru
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: pc-builder
+                port:
+                  number: 3000
