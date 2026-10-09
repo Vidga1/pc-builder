@@ -1,0 +1,145 @@
+---
+- name: Upload application Kubernetes manifests
+  ansible.builtin.copy:
+    src: "{{ playbook_dir }}/../k8s/"
+    dest: "{{ pc_builder_manifests_dir }}/"
+    mode: "0644"
+    directory_mode: "0755"
+
+- name: Create PC Builder namespace
+  ansible.builtin.command: kubectl apply -f {{ pc_builder_manifests_dir }}/namespace.yml
+  environment:
+    KUBECONFIG: "{{ kubeconfig_path }}"
+  register: namespace_apply
+  changed_when: "'created' in namespace_apply.stdout or 'configured' in namespace_apply.stdout"
+
+- name: Create or update Kubernetes Secret without logging credentials
+  no_log: true
+  block:
+    - name: Temporarily upload local secrets to control-plane
+      ansible.builtin.copy:
+        src: "{{ pc_builder_secrets_file }}"
+        dest: /root/.pc-builder.k8s.env
+        mode: "0600"
+
+    - name: Apply Kubernetes Secret
+      ansible.builtin.shell: |
+        set -o pipefail
+        kubectl -n pc-builder create secret generic pc-builder-secrets \
+          --from-env-file=/root/.pc-builder.k8s.env \
+          --dry-run=client -o yaml | kubectl apply -f -
+      args:
+        executable: /bin/bash
+      environment:
+        KUBECONFIG: "{{ kubeconfig_path }}"
+  always:
+    - name: Remove temporary secrets file from control-plane
+      ansible.builtin.file:
+        path: /root/.pc-builder.k8s.env
+        state: absent
+
+- name: Deploy PostgreSQL
+  ansible.builtin.command: kubectl apply -f {{ pc_builder_manifests_dir }}/postgres.yml
+  environment:
+    KUBECONFIG: "{{ kubeconfig_path }}"
+  register: postgres_apply
+  changed_when: "'created' in postgres_apply.stdout or 'configured' in postgres_apply.stdout"
+
+- name: Wait for PostgreSQL
+  ansible.builtin.command: kubectl rollout status statefulset/postgres -n pc-builder --timeout=300s
+  environment:
+    KUBECONFIG: "{{ kubeconfig_path }}"
+  changed_when: false
+
+- name: Deploy Next.js service
+  ansible.builtin.command: kubectl apply -f {{ pc_builder_manifests_dir }}/service.yml
+  environment:
+    KUBECONFIG: "{{ kubeconfig_path }}"
+  register: service_apply
+  changed_when: "'created' in service_apply.stdout or 'configured' in service_apply.stdout"
+
+- name: Deploy Next.js application
+  ansible.builtin.command: kubectl apply -f {{ pc_builder_manifests_dir }}/app.yml
+  environment:
+    KUBECONFIG: "{{ kubeconfig_path }}"
+  register: app_apply
+  changed_when: "'created' in app_apply.stdout or 'configured' in app_apply.stdout"
+
+- name: Wait for Next.js (including Prisma migrations)
+  ansible.builtin.command: kubectl rollout status deployment/pc-builder -n pc-builder --timeout=360s
+  environment:
+    KUBECONFIG: "{{ kubeconfig_path }}"
+  changed_when: false
+
+# seed.ts deletes all existing records; only run on a completely empty database.
+- name: Check if the application database is empty
+  ansible.builtin.command:
+    argv:
+      - kubectl
+      - -n
+      - pc-builder
+      - exec
+      - postgres-0
+      - --
+      - sh
+      - -c
+      - >-
+        PGPASSWORD="$POSTGRES_PASSWORD" psql -U "$POSTGRES_USER"
+        -d "$POSTGRES_DB" -tAc
+        'SELECT CASE WHEN
+        (SELECT COUNT(*) FROM "Component") = 0 AND
+        (SELECT COUNT(*) FROM "User") = 0 AND
+        (SELECT COUNT(*) FROM "Build") = 0
+        THEN 1 ELSE 0 END;'
+  environment:
+    KUBECONFIG: "{{ kubeconfig_path }}"
+  register: empty_database
+  changed_when: false
+
+- name: Seed a new empty database once (never overwrite existing records)
+  ansible.builtin.command:
+    argv:
+      - kubectl
+      - -n
+      - pc-builder
+      - exec
+      - deployment/pc-builder
+      - --
+      - npx
+      - --yes
+      - tsx
+      - prisma/seed.ts
+  environment:
+    KUBECONFIG: "{{ kubeconfig_path }}"
+  when: empty_database.stdout | trim == '1'
+
+- name: Configure Let's Encrypt ClusterIssuer
+  ansible.builtin.command: kubectl apply -f {{ pc_builder_manifests_dir }}/cluster-issuer.yaml
+  environment:
+    KUBECONFIG: "{{ kubeconfig_path }}"
+  register: issuer_apply
+  changed_when: "'created' in issuer_apply.stdout or 'configured' in issuer_apply.stdout"
+
+- name: Wait for Let's Encrypt issuer to become ready
+  ansible.builtin.command: kubectl wait --for=condition=Ready clusterissuer/letsencrypt-prod --timeout=180s
+  environment:
+    KUBECONFIG: "{{ kubeconfig_path }}"
+  changed_when: false
+
+- name: Configure HTTPS Ingress
+  ansible.builtin.command: kubectl apply -f {{ pc_builder_manifests_dir }}/ingress.yaml
+  environment:
+    KUBECONFIG: "{{ kubeconfig_path }}"
+  register: ingress_apply
+  changed_when: "'created' in ingress_apply.stdout or 'configured' in ingress_apply.stdout"
+
+- name: Show deployment status
+  ansible.builtin.command: kubectl get pods,ingress,certificate -n pc-builder
+  environment:
+    KUBECONFIG: "{{ kubeconfig_path }}"
+  register: deployment_status
+  changed_when: false
+
+- name: Print deployment status
+  ansible.builtin.debug:
+    var: deployment_status.stdout_lines
