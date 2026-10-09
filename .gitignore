@@ -48,3 +48,4 @@ infra/.terraform/
 *.tfstate
 *.tfstate.*
 *.tfplan
+instruction.md
