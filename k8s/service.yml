@@ -6,7 +6,7 @@ metadata:
   namespace: pc-builder
 
 spec:
-  type: NodePort
+  type: ClusterIP
 
   selector:
     app: pc-builder
@@ -14,4 +14,3 @@ spec:
   ports:
     - port: 3000
       targetPort: 3000
-      nodePort: 30080
