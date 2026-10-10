@@ -1,67 +1,62 @@
 apiVersion: apps/v1
 kind: Deployment
-
 metadata:
   name: pc-builder
-  namespace: pc-builder
-
+  labels:
+    app: pc-builder
 spec:
-  replicas: 1
-
+  replicas: {{ .Values.replicaCount }}
   selector:
+    # Keep this unchanged: the selector of the existing Deployment is immutable.
     matchLabels:
       app: pc-builder
-
   template:
     metadata:
       labels:
         app: pc-builder
-
     spec:
+      {{- with .Values.nodeSelector }}
       nodeSelector:
-        kubernetes.io/hostname: k8s-worker
-
+{{ toYaml . | indent 8 }}
+      {{- end }}
+      # Migrations run in the container's startup command; wait for the DB first.
+      initContainers:
+        - name: wait-for-postgres
+          image: "{{ .Values.postgres.image.repository }}:{{ .Values.postgres.image.tag }}"
+          imagePullPolicy: {{ .Values.postgres.image.pullPolicy }}
+          command: ["sh", "-c", "until pg_isready -h postgres -p 5432; do sleep 2; done"]
       containers:
         - name: pc-builder
-          image: ghcr.io/vidga1/pc-builder:latest
-          imagePullPolicy: Always
-
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
           ports:
             - containerPort: 3000
-
           env:
             - name: NODE_ENV
               value: production
-
             - name: POSTGRES_USER
               valueFrom:
                 secretKeyRef:
-                  name: pc-builder-secrets
+                  name: {{ .Values.existingSecretName | quote }}
                   key: POSTGRES_USER
-
             - name: POSTGRES_PASSWORD
               valueFrom:
                 secretKeyRef:
-                  name: pc-builder-secrets
+                  name: {{ .Values.existingSecretName | quote }}
                   key: POSTGRES_PASSWORD
-
             - name: POSTGRES_DB
               valueFrom:
                 secretKeyRef:
-                  name: pc-builder-secrets
+                  name: {{ .Values.existingSecretName | quote }}
                   key: POSTGRES_DB
-
             - name: DATABASE_URL
               value: "postgresql://$(POSTGRES_USER):$(POSTGRES_PASSWORD)@postgres:5432/$(POSTGRES_DB)"
-
             - name: NEXTAUTH_SECRET
               valueFrom:
                 secretKeyRef:
-                  name: pc-builder-secrets
+                  name: {{ .Values.existingSecretName | quote }}
                   key: NEXTAUTH_SECRET
-
             - name: NEXTAUTH_URL
-              value: "https://my-pc-builder.ru"
-
+              value: {{ .Values.nextAuthUrl | quote }}
             - name: RUN_SEED_ON_START
               value: "false"

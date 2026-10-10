@@ -65,3 +65,10 @@ npm run dev
 10. **Открыть браузер** и перейти по адресу http://localhost:3000, чтобы увидеть запущенное приложение.
 
 Успешный запуск проекта откроет приложение PC Builder в браузере. Если возникли проблемы во время установки или запуска, убедитесь, что все шаги выполнены по порядку и в соответствии с инструкцией.
+
+## Kubernetes deployment
+
+Для развёртывания на REG.RU используйте [DEPLOY.md](DEPLOY.md):
+Terraform создаёт VM, Ansible настраивает Kubernetes, Helm устанавливает
+Traefik, cert-manager и PC Builder (Next.js + PostgreSQL).
+

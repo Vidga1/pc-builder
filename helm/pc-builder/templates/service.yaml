@@ -1,16 +1,13 @@
 apiVersion: v1
 kind: Service
-
 metadata:
   name: pc-builder
-  namespace: pc-builder
-
+  labels:
+    app: pc-builder
 spec:
-  type: ClusterIP
-
+  type: {{ .Values.service.type }}
   selector:
     app: pc-builder
-
   ports:
-    - port: 3000
+    - port: {{ .Values.service.port }}
       targetPort: 3000

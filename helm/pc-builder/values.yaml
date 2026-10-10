@@ -1,0 +1,37 @@
+# Preserve the names and node placement of the previous kubectl manifests.
+# This chart is intended to be installed as release "pc-builder".
+replicaCount: 1
+
+image:
+  repository: ghcr.io/vidga1/pc-builder
+  tag: latest
+  pullPolicy: Always
+
+# Secret is created separately (never put plaintext credentials in Helm values).
+existingSecretName: pc-builder-secrets
+
+nodeSelector:
+  kubernetes.io/hostname: k8s-worker
+
+nextAuthUrl: https://my-pc-builder.ru
+
+service:
+  type: ClusterIP
+  port: 3000
+
+postgres:
+  image:
+    repository: postgres
+    tag: "15"
+    pullPolicy: IfNotPresent
+  # Local disk on the worker; NOT durable against deleting that VM.
+  hostPath: /var/lib/pc-builder/postgres
+
+ingress:
+  enabled: true
+  className: traefik
+  host: my-pc-builder.ru
+  tlsSecretName: pc-builder-tls
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+    traefik.ingress.kubernetes.io/router.entrypoints: websecure
