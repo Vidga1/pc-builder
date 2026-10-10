@@ -72,3 +72,5 @@ npm run dev
 Terraform создаёт VM, Ansible настраивает Kubernetes, Helm устанавливает
 Traefik, cert-manager и PC Builder (Next.js + PostgreSQL).
 
+Для автоматического обновления после push в main:
+[настройка GitHub Actions](CI_CD.md).
