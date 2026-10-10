@@ -29,3 +29,7 @@ The Dockerfile runs Prisma migrations at app startup. Initial seed data is
 deliberately **not** a Helm hook: prisma/seed.ts deletes existing rows.
 Run the guarded helper in scripts/seed-if-empty.sh explicitly on a fresh DB,
 after the Deployment is ready.
+
+Автоматический CI/CD описан в [CI_CD.md](../../CI_CD.md).
+The app Deployment includes a readiness probe on "/" and supports optional
+imagePullSecrets when the GHCR package is private.

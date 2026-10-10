@@ -7,6 +7,9 @@ image:
   tag: latest
   pullPolicy: Always
 
+# Needed only for a private GHCR package.
+imagePullSecrets: []
+
 # Secret is created separately (never put plaintext credentials in Helm values).
 existingSecretName: pc-builder-secrets
 
